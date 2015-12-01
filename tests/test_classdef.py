@@ -7,38 +7,53 @@
 
 import dill
 import sys
+
+import nose
+
 dill.settings['recurse'] = True
+
 
 # test classdefs
 class _class:
     def _method(self):
         pass
+
     def ok(self):
         return True
+
 
 class _class2:
     def __call__(self):
         pass
+
     def ok(self):
         return True
+
 
 class _newclass(object):
     def _method(self):
         pass
+
     def ok(self):
         return True
+
 
 class _newclass2(object):
     def __call__(self):
         pass
+
     def ok(self):
         return True
+
 
 class _meta(type):
     pass
 
+
 def __call__(self):
     pass
+
+
 def ok(self):
     return True
 
@@ -47,52 +62,54 @@ _mclass = _meta("_mclass", (object,), {"__call__": __call__, "ok": ok})
 del __call__
 del ok
 
-o = _class()
-oc = _class2()
-n = _newclass()
-nc = _newclass2()
-m = _mclass()
 
-# test pickles for class instances
-assert dill.pickles(o)
-assert dill.pickles(oc)
-assert dill.pickles(n)
-assert dill.pickles(nc)
-assert dill.pickles(m)
+def test_classes():
+    o = _class()
+    oc = _class2()
+    n = _newclass()
+    nc = _newclass2()
+    m = _mclass()
 
-clslist = [_class,_class2,_newclass,_newclass2,_mclass]
-objlist = [o,oc,n,nc,m]
-_clslist = [dill.dumps(obj) for obj in clslist]
-_objlist = [dill.dumps(obj) for obj in objlist]
+    # test pickles for class instances
+    assert dill.pickles(o)
+    assert dill.pickles(oc)
+    assert dill.pickles(n)
+    assert dill.pickles(nc)
+    assert dill.pickles(m)
 
-for obj in clslist:
-    globals().pop(obj.__name__)
-del clslist
-for obj in ['o','oc','n','nc']:
-    globals().pop(obj)
-del objlist
-del obj
+    clslist = [_class, _class2, _newclass, _newclass2, _mclass]
+    objlist = [o, oc, n, nc, m]
+    _clslist = [dill.dumps(obj) for obj in clslist]
+    _objlist = [dill.dumps(obj) for obj in objlist]
 
-for obj,cls in zip(_objlist,_clslist):
-    _cls = dill.loads(cls)
-    _obj = dill.loads(obj)
-    assert _obj.ok()
-    assert _cls.ok(_cls())
-    if _cls.__name__ == "_mclass":
-        assert type(_cls).__name__ == "_meta"
+    for obj in clslist:
+        globals().pop(obj.__name__)
+    del clslist
+    for obj in ['o', 'oc', 'n', 'nc']:
+        locals().pop(obj)
+    del objlist
+    del obj
 
-# test NoneType
-assert dill.pickles(type(None))
+    for obj, cls in zip(_objlist, _clslist):
+        _cls = dill.loads(cls)
+        _obj = dill.loads(obj)
+        assert _obj.ok()
+        assert _cls.ok(_cls())
+        if _cls.__name__ == "_mclass":
+            assert type(_cls).__name__ == "_meta"
 
-# test namedtuple
-if hex(sys.hexversion) >= '0x20600f0':
-    from collections import namedtuple
+    # test NoneType
+    assert dill.pickles(type(None))
 
-    Z = namedtuple("Z", ['a','b'])
-    Zi = Z(0,1)
-    X = namedtuple("Y", ['a','b'])
-    X.__name__ = "X" #XXX: name must 'match' or fails to pickle
-    Xi = X(0,1)
+    # test namedtuple
+    if hex(sys.hexversion) >= '0x20600f0':
+        from collections import namedtuple
+
+        Z = namedtuple("Z", ['a', 'b'])
+        Zi = Z(0, 1)
+        X = namedtuple("Y", ['a', 'b'])
+        X.__name__ = "X"  # XXX: name must 'match' or fails to pickle
+        Xi = X(0, 1)
 
     assert Z == dill.loads(dill.dumps(Z))
     assert Zi == dill.loads(dill.dumps(Zi))
@@ -105,15 +122,29 @@ try:
     class TestArray(np.ndarray):
         def __new__(cls, input_array, color):
             obj = np.asarray(input_array).view(cls)
-            obj.color = color 
+            obj.color = color
             return obj
+
         def __array_finalize__(self, obj):
             if obj is None:
                 return
             if isinstance(obj, type(self)):
                 self.color = obj.color
+
         def __getnewargs__(self):
             return np.asarray(self), self.color
+
+    class TestArray2(np.ndarray):
+        color = 'blue'
+
+
+except ImportError:
+    np = None
+
+
+def test_subclass_ndarray():
+    if np is None:
+        raise nose.SkipTest('This test needs numpy')
 
     a1 = TestArray(np.zeros(100), color='green')
     assert dill.pickles(a1)
@@ -123,27 +154,25 @@ try:
     assert dill.pickles(a2)
     assert a2.__dict__ == dill.copy(a2).__dict__
 
-    class TestArray2(np.ndarray):
-        color = 'blue'
-
-    a3 = TestArray2([1,2,3,4,5])
+    a3 = TestArray2([1, 2, 3, 4, 5])
     a3.color = 'green'
     assert dill.pickles(a3)
     assert a3.__dict__ == dill.copy(a3).__dict__
 
-except ImportError: pass
-
 
 class A(object):
-  @classmethod
-  def test(cls):
-    pass
+    @classmethod
+    def test(cls):
+        pass
 
-a = A()
 
-res = dill.dumps(a)
-new_obj = dill.loads(res)
-new_obj.__class__.test()
+def test_class():
+
+    a = A()
+
+    res = dill.dumps(a)
+    new_obj = dill.loads(res)
+    new_obj.__class__.test()
 
 
 # EOF
