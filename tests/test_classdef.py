@@ -62,14 +62,19 @@ _mclass = _meta("_mclass", (object,), {"__call__": __call__, "ok": ok})
 del __call__
 del ok
 
+o = _class()
+oc = _class2()
+n = _newclass()
+nc = _newclass2()
+m = _mclass()
+
+clslist = [_class, _class2, _newclass, _newclass2, _mclass]
+objlist = [o, oc, n, nc, m]
+_clslist = [dill.dumps(obj) for obj in clslist]
+_objlist = [dill.dumps(obj) for obj in objlist]
+
 
 def test_classes():
-    o = _class()
-    oc = _class2()
-    n = _newclass()
-    nc = _newclass2()
-    m = _mclass()
-
     # test pickles for class instances
     assert dill.pickles(o)
     assert dill.pickles(oc)
@@ -77,16 +82,13 @@ def test_classes():
     assert dill.pickles(nc)
     assert dill.pickles(m)
 
-    clslist = [_class, _class2, _newclass, _newclass2, _mclass]
-    objlist = [o, oc, n, nc, m]
-    _clslist = [dill.dumps(obj) for obj in clslist]
-    _objlist = [dill.dumps(obj) for obj in objlist]
+    global clslist, objlist
 
     for obj in clslist:
         globals().pop(obj.__name__)
     del clslist
     for obj in ['o', 'oc', 'n', 'nc']:
-        locals().pop(obj)
+        globals().pop(obj)
     del objlist
     del obj
 
