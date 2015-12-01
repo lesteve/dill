@@ -49,8 +49,8 @@ def isdynamic(obj):
 
 def _matchlambda(func, line):
     """check if lambda object 'func' matches raw line of code 'line'"""
-    from dill.detect import code as getcode
-    from dill.detect import freevars, globalvars, varnames
+    from .detect import code as getcode
+    from .detect import freevars, globalvars, varnames
     dummy = lambda : '__this_is_a_big_dummy_function__'
     # process the line (removing leading whitespace, etc)
     lhs,rhs = line.split('lambda ',1)[-1].split(":", 1) #FIXME: if !1 inputs
@@ -559,7 +559,7 @@ def dumpsource(object, alias='', new=False, enclose=True):
     create the object inside a function enclosure (thus minimizing
     any global namespace pollution).
     """
-    from dill import dumps
+    from .dill import dumps
     pik = repr(dumps(object))
     code = 'import dill\n'
     if enclose:
@@ -719,7 +719,7 @@ def getimport(obj, alias='', verify=True, builtin=False, enclosing=False):
     If alias is provided, then rename the object on import.
     """
     if enclosing:
-        from dill.detect import outermost
+        from .detect import outermost
         _obj = outermost(obj)
         obj = _obj if _obj else obj
     # get the namespace
@@ -825,7 +825,7 @@ def _importable(obj, alias='', source=None, enclosing=False, force=True, \
 def _closuredimport(func, alias='', builtin=False):
     """get import for closured objects; return a dict of 'name' and 'import'"""
     import re
-    from dill.detect import freevars, outermost
+    from .detect import freevars, outermost
     free_vars = freevars(func)
     func_vars = {}
     # split into 'funcs' and 'non-funcs'
@@ -882,7 +882,7 @@ def _closuredsource(func, alias=''):
     #      - pollutes global namespace
     #      - fails if name of freevars are reused
     #      - can unnecessarily duplicate function code
-    from dill.detect import freevars
+    from .detect import freevars
     free_vars = freevars(func)
     func_vars = {}
     # split into 'funcs' and 'non-funcs'
@@ -979,7 +979,7 @@ def importable(obj, alias='', source=None, builtin=True):
             else:
                 src = '\n'.join(_src)
             # get source code of objects referred to by obj in global scope
-            from dill.detect import globalvars
+            from .detect import globalvars
             obj = globalvars(obj) #XXX: don't worry about alias? recurse? etc?
             obj = list(getsource(_obj,name,force=True) for (name,_obj) in obj.items() if not isbuiltin(_obj))
             obj = '\n'.join(obj) if obj else ''
