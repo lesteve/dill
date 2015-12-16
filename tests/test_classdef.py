@@ -10,6 +10,8 @@ import sys
 
 import nose
 
+__name__ = '__main__'
+
 dill.settings['recurse'] = True
 
 
@@ -103,20 +105,22 @@ def test_classes():
     # test NoneType
     assert dill.pickles(type(None))
 
+
+if hex(sys.hexversion) >= '0x20600f0':
+    from collections import namedtuple
+    Z = namedtuple("Z", ['a', 'b'])
+    Zi = Z(0, 1)
+    X = namedtuple("Y", ['a', 'b'])
+    X.__name__ = "X"  # XXX: name must 'match' or fails to pickle
+    Xi = X(0, 1)
+
     # test namedtuple
-    if hex(sys.hexversion) >= '0x20600f0':
-        from collections import namedtuple
-
-        Z = namedtuple("Z", ['a', 'b'])
-        Zi = Z(0, 1)
-        X = namedtuple("Y", ['a', 'b'])
-        X.__name__ = "X"  # XXX: name must 'match' or fails to pickle
-        Xi = X(0, 1)
-
-    assert Z == dill.loads(dill.dumps(Z))
-    assert Zi == dill.loads(dill.dumps(Zi))
-    assert X == dill.loads(dill.dumps(X))
-    assert Xi == dill.loads(dill.dumps(Xi))
+    def test_namedtuple():
+        print(dill.dumps(Z, byref=False))
+        assert Z == dill.loads(dill.dumps(Z))
+        assert Zi == dill.loads(dill.dumps(Zi))
+        assert X == dill.loads(dill.dumps(X))
+        assert Xi == dill.loads(dill.dumps(Xi))
 
 try:
     import numpy as np
