@@ -44,7 +44,7 @@ def throws(op, args, exc):
         return False
 
 
-def test(strictio, fmode):
+def check(strictio, fmode):
     # file exists, with same contents
     # read
 
@@ -460,15 +460,22 @@ def test(strictio, fmode):
     f2.close()
 
 
+def test():
+    check(strictio=False, fmode=dill.HANDLE_FMODE)
+    check(strictio=False, fmode=dill.CONTENTS_FMODE)
+    check(strictio=False, fmode=dill.FILE_FMODE)
+    # check(strictio=True, fmode=dill.HANDLE_FMODE)
+    # check(strictio=True, fmode=dill.CONTENTS_FMODE)
+    # check(strictio=True, fmode=dill.FILE_FMODE)
+
+
+def main():
+    test()
+
+
 if __name__ == '__main__':
+    main()
 
-    test(strictio=False, fmode=dill.HANDLE_FMODE)
-    test(strictio=False, fmode=dill.CONTENTS_FMODE)
-    test(strictio=False, fmode=dill.FILE_FMODE)
-
-   #test(strictio=True, fmode=dill.HANDLE_FMODE)
-   #test(strictio=True, fmode=dill.CONTENTS_FMODE)
-   #test(strictio=True, fmode=dill.FILE_FMODE)
 
 if os.path.exists(fname):
     os.remove(fname)
