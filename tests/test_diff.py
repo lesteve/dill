@@ -11,57 +11,63 @@ from dill import __diff as diff
 class A:
     pass
 
-a = A()
-b = A()
-c = A()
-a.a = b
-b.a = c
-diff.memorise(a)
-assert not diff.has_changed(a)
-c.a = 1
-assert diff.has_changed(a)
-diff.memorise(c, force=True)
-assert not diff.has_changed(a)
-c.a = 2
-assert diff.has_changed(a)
-changed = diff.whats_changed(a)
-assert list(changed[0].keys()) == ["a"]
-assert not changed[1]
-
-a2 = []
-b2 = [a2]
-c2 = [b2]
-diff.memorise(c2)
-assert not diff.has_changed(c2)
-a2.append(1)
-assert diff.has_changed(c2)
-changed = diff.whats_changed(c2)
-assert changed[0] == {}
-assert changed[1]
-
-a3 = {}
-b3 = {1: a3}
-c3 = {1: b3}
-diff.memorise(c3)
-assert not diff.has_changed(c3)
-a3[1] = 1
-assert diff.has_changed(c3)
-changed = diff.whats_changed(c3)
-assert changed[0] == {}
-assert changed[1]
-
-try:
-    import abc
-    # make sure the "_abc_invaldation_counter" does not cause test to fail
-    diff.memorise(abc.ABCMeta, force=True)
-    assert not diff.has_changed(abc)
-    abc.ABCMeta.zzz = 1
-    assert diff.has_changed(abc)
-    changed = diff.whats_changed(abc)
-    assert list(changed[0].keys()) == ["ABCMeta"]
+def test_class():
+    a = A()
+    b = A()
+    c = A()
+    a.a = b
+    b.a = c
+    diff.memorise(a)
+    assert not diff.has_changed(a)
+    c.a = 1
+    assert diff.has_changed(a)
+    c.a = 2
+    assert diff.has_changed(a)
+    diff.memorise(c, force=True)
+    assert not diff.has_changed(a)
+    del c.a
+    assert diff.has_changed(a)
+    changed = diff.whats_changed(a)
+    assert list(changed[0].keys()) == ["a"]
     assert not changed[1]
-except ImportError:
-    pass
+
+def test_list():
+    a2 = []
+    b2 = [a2]
+    c2 = [b2]
+    diff.memorise(c2)
+    assert not diff.has_changed(c2)
+    a2.append(1)
+    assert diff.has_changed(c2)
+    changed = diff.whats_changed(c2)
+    assert changed[0] == {}
+    assert changed[1]
+
+def test_dict():
+    a3 = {}
+    b3 = {1: a3}
+    c3 = {1: b3}
+    diff.memorise(c3)
+    assert not diff.has_changed(c3)
+    a3[1] = 1
+    assert diff.has_changed(c3)
+    changed = diff.whats_changed(c3)
+    assert changed[0] == {}
+    assert changed[1]
+
+def test_module():
+    try:
+        import abc
+        # make sure the "_abc_invalidation_counter" does not cause test to fail
+        diff.memorise(abc.ABCMeta, force=True)
+        assert not diff.has_changed(abc)
+        abc.ABCMeta.zzz = 1
+        assert diff.has_changed(abc)
+        changed = diff.whats_changed(abc)
+        assert list(changed[0].keys()) == ["ABCMeta"]
+        assert not changed[1]
+    except ImportError:
+        pass
 
 '''
 import Queue
@@ -83,19 +89,12 @@ assert list(changed[0].keys()) == ["zzz"]
 assert not changed[1]
 '''
 
-a = A()
-b = A()
-c = A()
-a.a = b
-b.a = c
-diff.memorise(a)
-assert not diff.has_changed(a)
-c.a = 1
-assert diff.has_changed(a)
-diff.memorise(c, force=True)
-assert not diff.has_changed(a)
-del c.a
-assert diff.has_changed(a)
-changed = diff.whats_changed(a)
-assert list(changed[0].keys()) == ["a"]
-assert not changed[1]
+
+def main():
+    test_class()
+    test_dict()
+    test_list()
+    test_module()
+
+if __name__ == '__main__':
+    main()

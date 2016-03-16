@@ -33,6 +33,11 @@ dont_memo = set(id(i) for i in (memo, sys.modules, sys.path_importer_cache,
              os.environ, id_to_obj))
 
 
+def ensure_list(iter_or_list):
+    return (iter_or_list if isinstance(iter_or_list, list)
+            else list(iter_or_list))
+
+
 def get_attrs(obj):
     """
     Gets all the attributes of an object though its __dict__ or return None
@@ -91,7 +96,8 @@ def memorise(obj, force=False):
     if g is None:
         attrs_id = None
     else:
-        attrs_id = dict((key,id_(value)) for key, value in g.items())
+        attrs_id = dict((key, id_(value))
+                        for key, value in ensure_list(g.items()))
 
     s = get_seq(obj)
     if s is None:
@@ -105,7 +111,7 @@ def memorise(obj, force=False):
     id_to_obj[obj_id] = obj
     mem = memorise
     if g is not None:
-        [mem(value) for key, value in g.items()]
+        [mem(value) for key, value in ensure_list(g.items())]
 
     if s is not None:
         if hasattr(s, "items"):
@@ -224,6 +230,6 @@ if hasattr(builtins, "_"):
 
 # memorise all already imported modules. This implies that this must be
 # imported first for any changes to be recorded
-for mod in sys.modules.values():
+for mod in ensure_list(sys.modules.values()):
     memorise(mod)
 release_gone()
